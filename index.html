@@ -1,0 +1,1162 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RESKO - Sistem Tracking Disposisi Surat</title>
+    
+    <!-- Bootstrap CSS -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <!-- FullCalendar CSS -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/fullcalendar/6.1.8/fullcalendar.min.css" rel="stylesheet">
+    
+    <style>
+        :root {
+            --primary-color: #2c3e50;
+            --secondary-color: #3498db;
+            --success-color: #27ae60;
+            --warning-color: #f39c12;
+            --danger-color: #e74c3c;
+            --process-color: #f39c12;
+            --completed-color: #27ae60;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px 0;
+        }
+
+        .main-container {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            padding: 30px;
+            margin: 20px auto;
+            max-width: 1400px;
+        }
+
+        .header-section {
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+            color: white;
+            padding: 30px;
+            border-radius: 15px;
+            margin-bottom: 30px;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .header-section::before {
+            content: "";
+            position: absolute;
+            top: -50%;
+            right: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
+            animation: rotate 30s linear infinite;
+        }
+
+        @keyframes rotate {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        .header-section h1 {
+            font-size: 3em;
+            font-weight: bold;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+            position: relative;
+            z-index: 1;
+        }
+
+        .header-section .subtitle {
+            font-size: 1.2em;
+            opacity: 0.95;
+            position: relative;
+            z-index: 1;
+        }
+
+        .nav-tabs {
+            border-bottom: 3px solid var(--secondary-color);
+            margin-bottom: 30px;
+        }
+
+        .nav-tabs .nav-link {
+            color: var(--primary-color);
+            font-weight: 600;
+            border: none;
+            padding: 12px 25px;
+            margin-right: 10px;
+            border-radius: 10px 10px 0 0;
+            transition: all 0.3s;
+        }
+
+        .nav-tabs .nav-link:hover {
+            background: rgba(52, 152, 219, 0.1);
+            transform: translateY(-2px);
+        }
+
+        .nav-tabs .nav-link.active {
+            background: var(--secondary-color);
+            color: white;
+        }
+
+        .form-section {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+            margin-bottom: 30px;
+        }
+
+        .form-label {
+            font-weight: 600;
+            color: var(--primary-color);
+            margin-bottom: 8px;
+        }
+
+        .form-control, .form-select {
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            padding: 12px;
+            transition: all 0.3s;
+        }
+
+        .form-control:focus, .form-select:focus {
+            border-color: var(--secondary-color);
+            box-shadow: 0 0 0 0.2rem rgba(52, 152, 219, 0.25);
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+            border: none;
+            padding: 12px 30px;
+            border-radius: 10px;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(52, 152, 219, 0.4);
+        }
+
+        .summary-card {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            margin-bottom: 20px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+            transition: all 0.3s;
+        }
+
+        .summary-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+        }
+
+        .summary-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #f0f0f0;
+            margin-bottom: 20px;
+        }
+
+        .summary-header h3 {
+            color: var(--primary-color);
+            font-weight: bold;
+            margin: 0;
+        }
+
+        .badge-process {
+            background: var(--process-color);
+            color: white;
+            padding: 8px 15px;
+            border-radius: 20px;
+            font-weight: 600;
+        }
+
+        .badge-completed {
+            background: var(--completed-color);
+            color: white;
+            padding: 8px 15px;
+            border-radius: 20px;
+            font-weight: 600;
+        }
+
+        .memo-item {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 15px;
+            border-left: 4px solid var(--secondary-color);
+            transition: all 0.3s;
+        }
+
+        .memo-item:hover {
+            background: #e8f4f8;
+            transform: translateX(5px);
+        }
+
+        .memo-item.completed {
+            border-left-color: var(--completed-color);
+        }
+
+        .memo-item.process {
+            border-left-color: var(--process-color);
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        .btn-sm {
+            padding: 5px 15px;
+            border-radius: 8px;
+            font-size: 0.85em;
+        }
+
+        .calendar-container {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+            margin-bottom: 30px;
+        }
+
+        #calendar {
+            max-width: 100%;
+            margin: 0 auto;
+        }
+
+        .fc-event {
+            border-radius: 5px;
+            padding: 2px 5px;
+            font-size: 0.85em;
+            cursor: pointer;
+        }
+
+        .fc-event-process {
+            background: var(--process-color);
+            border-color: var(--process-color);
+        }
+
+        .fc-event-completed {
+            background: var(--completed-color);
+            border-color: var(--completed-color);
+        }
+
+        .chart-container {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+            margin-bottom: 30px;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background: linear-gradient(135deg, var(--secondary-color) 0%, var(--primary-color) 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 15px;
+            text-align: center;
+            transition: all 0.3s;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+
+        .stat-number {
+            font-size: 2.5em;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        .stat-label {
+            font-size: 0.9em;
+            opacity: 0.9;
+        }
+
+        .modal-content {
+            border-radius: 15px;
+        }
+
+        .modal-header {
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+            color: white;
+            border-radius: 15px 15px 0 0;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 40px;
+            color: #999;
+        }
+
+        .empty-state i {
+            font-size: 4em;
+            margin-bottom: 20px;
+            color: #ddd;
+        }
+
+        @media (max-width: 768px) {
+            .header-section h1 {
+                font-size: 2em;
+            }
+            
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .loading-spinner {
+            display: none;
+            text-align: center;
+            padding: 20px;
+        }
+
+        .loading-spinner.active {
+            display: block;
+        }
+
+        .toast-container {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 9999;
+        }
+
+        .toast {
+            min-width: 250px;
+            margin-bottom: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container main-container">
+        <!-- Header -->
+        <div class="header-section">
+            <h1>RESKO</h1>
+            <div class="subtitle">Sistem Tracking Disposisi Surat - Divisi SIMO Dept Resko</div>
+        </div>
+
+        <!-- Navigation Tabs -->
+        <ul class="nav nav-tabs" id="mainTabs" role="tablist">
+            <li class="nav-item" role="presentation">
+                <button class="nav-link active" id="form-tab" data-bs-toggle="tab" data-bs-target="#form" type="button">
+                    <i class="fas fa-plus-circle"></i> Tambah Data
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="summary-tab" data-bs-toggle="tab" data-bs-target="#summary" type="button">
+                    <i class="fas fa-list"></i> Summary
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="calendar-tab" data-bs-toggle="tab" data-bs-target="#calendar-view" type="button">
+                    <i class="fas fa-calendar"></i> Kalender
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="chart-tab" data-bs-toggle="tab" data-bs-target="#chart-view" type="button">
+                    <i class="fas fa-chart-bar"></i> Bagan Analisis
+                </button>
+            </li>
+        </ul>
+
+        <!-- Tab Content -->
+        <div class="tab-content" id="mainTabContent">
+            <!-- Form Tab -->
+            <div class="tab-pane fade show active" id="form" role="tabpanel">
+                <div class="form-section">
+                    <h3 class="mb-4"><i class="fas fa-file-alt"></i> Form Input Disposisi</h3>
+                    <form id="disposisiForm">
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="nomorMemo" class="form-label">Nomor Memo</label>
+                                <input type="text" class="form-control" id="nomorMemo" required>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="dariDivisi" class="form-label">Dari Divisi</label>
+                                <select class="form-select" id="dariDivisi" required>
+                                    <option value="">Pilih Divisi</option>
+                                    <option value="Direktur Utama">Direktur Utama</option>
+                                    <option value="Direktur Ops dan TI">Direktur Ops dan TI</option>
+                                    <option value="Direktur Pemasaran dan Syariah">Direktur Pemasaran dan Syariah</option>
+                                    <option value="Direktur Kepatuhan">Direktur Kepatuhan</option>
+                                    <option value="Direktur Kredit dan UMKM">Direktur Kredit dan UMKM</option>
+                                    <option value="SKAI">SKAI</option>
+                                    <option value="DCS">DCS</option>
+                                    <option value="DHC">DHC</option>
+                                    <option value="DDL">DDL</option>
+                                    <option value="DKA">DKA</option>
+                                    <option value="DTI">DTI</option>
+                                    <option value="DUM">DUM</option>
+                                    <option value="DJS">DJS</option>
+                                    <option value="DTR">DTR</option>
+                                    <option value="DSY">DSY</option>
+                                    <option value="DIB">DIB</option>
+                                    <option value="DKK">DKK</option>
+                                    <option value="DRK">DRK</option>
+                                    <option value="SKK">SKK</option>
+                                    <option value="SKMR">SKMR</option>
+                                    <option value="DPLK">DPLK</option>
+                                    <option value="UPPK">UPPK</option>
+                                    <option value="external">External (Input Manual)</option>
+                                </select>
+                                <input type="text" class="form-control mt-2" id="externalDivisi" placeholder="Masukkan nama divisi external" style="display:none;">
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="untukDivisi" class="form-label">Untuk Divisi</label>
+                                <input type="text" class="form-control" id="untukDivisi" value="SIMO Dept Resko" readonly>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="perihal" class="form-label">Perihal</label>
+                                <input type="text" class="form-control" id="perihal" required>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="analisTindakLanjut" class="form-label">Analis Tindak Lanjut</label>
+                                <select class="form-select" id="analisTindakLanjut" required>
+                                    <option value="">Pilih Analis</option>
+                                    <option value="Analis Renstra">Analis Renstra</option>
+                                    <option value="Analis MKO">Analis MKO</option>
+                                    <option value="Analis RESKO">Analis RESKO</option>
+                                </select>
+                            </div>
+                            <div class="col-md-3 mb-3">
+                                <label for="tanggalMemo" class="form-label">Tanggal Memo</label>
+                                <input type="date" class="form-control" id="tanggalMemo" required>
+                            </div>
+                            <div class="col-md-3 mb-3">
+                                <label for="tanggalDisposisi" class="form-label">Tanggal Disposisi</label>
+                                <input type="date" class="form-control" id="tanggalDisposisi" required>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-12">
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="fas fa-save"></i> Simpan Data
+                                </button>
+                                <button type="button" class="btn btn-secondary ms-2" onclick="resetForm()">
+                                    <i class="fas fa-redo"></i> Reset
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Summary Tab -->
+            <div class="tab-pane fade" id="summary" role="tabpanel">
+                <!-- Statistics -->
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-number" id="totalMemo">0</div>
+                        <div class="stat-label">Total Memo</div>
+                    </div>
+                    <div class="stat-card" style="background: linear-gradient(135deg, var(--process-color) 0%, #e67e22 100%);">
+                        <div class="stat-number" id="totalProcess">0</div>
+                        <div class="stat-label">On Process</div>
+                    </div>
+                    <div class="stat-card" style="background: linear-gradient(135deg, var(--completed-color) 0%, #229954 100%);">
+                        <div class="stat-number" id="totalCompleted">0</div>
+                        <div class="stat-label">Sudah Selesai</div>
+                    </div>
+                </div>
+
+                <!-- On Process Summary -->
+                <div class="summary-card">
+                    <div class="summary-header">
+                        <h3><i class="fas fa-spinner"></i> Summary On Process</h3>
+                        <span class="badge-process" id="processCount">0 Memo</span>
+                    </div>
+                    <div id="processList">
+                        <div class="empty-state">
+                            <i class="fas fa-inbox"></i>
+                            <p>Tidak ada memo yang sedang diproses</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Completed Summary -->
+                <div class="summary-card">
+                    <div class="summary-header">
+                        <h3><i class="fas fa-check-circle"></i> Summary Sudah Selesai</h3>
+                        <span class="badge-completed" id="completedCount">0 Memo</span>
+                    </div>
+                    <div id="completedList">
+                        <div class="empty-state">
+                            <i class="fas fa-inbox"></i>
+                            <p>Tidak ada memo yang selesai</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Calendar Tab -->
+            <div class="tab-pane fade" id="calendar-view" role="tabpanel">
+                <div class="calendar-container">
+                    <h3 class="mb-4"><i class="fas fa-calendar-alt"></i> Kalender Disposisi</h3>
+                    <div id="calendar"></div>
+                </div>
+            </div>
+
+            <!-- Chart Tab -->
+            <div class="tab-pane fade" id="chart-view" role="tabpanel">
+                <div class="chart-container">
+                    <h3 class="mb-4"><i class="fas fa-chart-pie"></i> Bagan Analisis Tugas</h3>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <canvas id="analisChart"></canvas>
+                        </div>
+                        <div class="col-md-6">
+                            <canvas id="statusChart"></canvas>
+                        </div>
+                    </div>
+                    <div class="row mt-4">
+                        <div class="col-12">
+                            <canvas id="timelineChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Edit Modal -->
+    <div class="modal fade" id="editModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title"><i class="fas fa-edit"></i> Edit Memo</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="editForm">
+                        <input type="hidden" id="editId">
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Nomor Memo</label>
+                                <input type="text" class="form-control" id="editNomorMemo" required>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Dari Divisi</label>
+                                <input type="text" class="form-control" id="editDariDivisi" required>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-12 mb-3">
+                                <label class="form-label">Perihal</label>
+                                <input type="text" class="form-control" id="editPerihal" required>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Analis Tindak Lanjut</label>
+                                <select class="form-select" id="editAnalis" required>
+                                    <option value="Analis Renstra">Analis Renstra</option>
+                                    <option value="Analis MKO">Analis MKO</option>
+                                    <option value="Analis RESKO">Analis RESKO</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Status</label>
+                                <select class="form-select" id="editStatus" required>
+                                    <option value="process">On Process</option>
+                                    <option value="completed">Sudah Selesai</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Tanggal Memo</label>
+                                <input type="date" class="form-control" id="editTanggalMemo" required>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Tanggal Disposisi</label>
+                                <input type="date" class="form-control" id="editTanggalDisposisi" required>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
+                    <button type="button" class="btn btn-primary" onclick="updateMemo()">
+                        <i class="fas fa-save"></i> Simpan Perubahan
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Container -->
+    <div class="toast-container"></div>
+
+    <!-- Loading Spinner -->
+    <div class="loading-spinner">
+        <div class="spinner-border text-primary" role="status">
+            <span class="visually-hidden">Loading...</span>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/fullcalendar/6.1.8/index.global.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.3.0/chart.umd.min.js"></script>
+    
+    <!-- Firebase -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-app.js";
+        import { getFirestore, collection, addDoc, getDocs, updateDoc, deleteDoc, doc, onSnapshot, query, orderBy } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore.js";
+
+        // Firebase configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyBkY52-iap8vin4opAkzgtuZihgj3JzkYs",
+            authDomain: "resko-7a52b.firebaseapp.com",
+            projectId: "resko-7a52b",
+            storageBucket: "resko-7a52b.firebasestorage.app",
+            messagingSenderId: "363890710591",
+            appId: "1:363890710591:web:a0b6bfdcb52e903aa9808a",
+            measurementId: "G-EDFM2PVKGH"
+        };
+
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        // Global variables
+        let memoData = [];
+        let calendar;
+        let analisChart, statusChart, timelineChart;
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            initializeCalendar();
+            initializeCharts();
+            loadData();
+            setupEventListeners();
+        });
+
+        // Setup Event Listeners
+        function setupEventListeners() {
+            // Form submit
+            document.getElementById('disposisiForm').addEventListener('submit', handleSubmit);
+            
+            // External division input toggle
+            document.getElementById('dariDivisi').addEventListener('change', function() {
+                const externalInput = document.getElementById('externalDivisi');
+                if (this.value === 'external') {
+                    externalInput.style.display = 'block';
+                    externalInput.required = true;
+                } else {
+                    externalInput.style.display = 'none';
+                    externalInput.required = false;
+                }
+            });
+        }
+
+        // Initialize Calendar
+        function initializeCalendar() {
+            const calendarEl = document.getElementById('calendar');
+            calendar = new FullCalendar.Calendar(calendarEl, {
+                initialView: 'dayGridMonth',
+                headerToolbar: {
+                    left: 'prev,next today',
+                    center: 'title',
+                    right: 'dayGridMonth,timeGridWeek'
+                },
+                locale: 'id',
+                events: [],
+                eventClick: function(info) {
+                    const memo = memoData.find(m => m.id === info.event.id);
+                    if (memo) {
+                        showMemoDetail(memo);
+                    }
+                }
+            });
+            calendar.render();
+        }
+
+        // Initialize Charts
+        function initializeCharts() {
+            // Analis Distribution Chart
+            const ctxAnalis = document.getElementById('analisChart').getContext('2d');
+            analisChart = new Chart(ctxAnalis, {
+                type: 'pie',
+                data: {
+                    labels: ['Analis Renstra', 'Analis MKO', 'Analis RESKO'],
+                    datasets: [{
+                        data: [0, 0, 0],
+                        backgroundColor: [
+                            'rgba(52, 152, 219, 0.8)',
+                            'rgba(243, 156, 18, 0.8)',
+                            'rgba(155, 89, 182, 0.8)'
+                        ],
+                        borderWidth: 2,
+                        borderColor: '#fff'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: {
+                            position: 'bottom'
+                        },
+                        title: {
+                            display: true,
+                            text: 'Distribusi Tugas per Analis'
+                        }
+                    }
+                }
+            });
+
+            // Status Chart
+            const ctxStatus = document.getElementById('statusChart').getContext('2d');
+            statusChart = new Chart(ctxStatus, {
+                type: 'doughnut',
+                data: {
+                    labels: ['On Process', 'Sudah Selesai'],
+                    datasets: [{
+                        data: [0, 0],
+                        backgroundColor: [
+                            'rgba(243, 156, 18, 0.8)',
+                            'rgba(39, 174, 96, 0.8)'
+                        ],
+                        borderWidth: 2,
+                        borderColor: '#fff'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: {
+                            position: 'bottom'
+                        },
+                        title: {
+                            display: true,
+                            text: 'Status Pengerjaan'
+                        }
+                    }
+                }
+            });
+
+            // Timeline Chart
+            const ctxTimeline = document.getElementById('timelineChart').getContext('2d');
+            timelineChart = new Chart(ctxTimeline, {
+                type: 'bar',
+                data: {
+                    labels: [],
+                    datasets: [{
+                        label: 'On Process',
+                        data: [],
+                        backgroundColor: 'rgba(243, 156, 18, 0.8)'
+                    }, {
+                        label: 'Sudah Selesai',
+                        data: [],
+                        backgroundColor: 'rgba(39, 174, 96, 0.8)'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    scales: {
+                        x: {
+                            stacked: true
+                        },
+                        y: {
+                            stacked: true
+                        }
+                    },
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: 'Timeline Disposisi per Bulan'
+                        }
+                    }
+                }
+            });
+        }
+
+        // Handle form submit
+        async function handleSubmit(e) {
+            e.preventDefault();
+            
+            const divisiValue = document.getElementById('dariDivisi').value;
+            const dariDivisi = divisiValue === 'external' ? 
+                document.getElementById('externalDivisi').value : 
+                divisiValue;
+
+            const memoData = {
+                nomorMemo: document.getElementById('nomorMemo').value,
+                dariDivisi: dariDivisi,
+                untukDivisi: document.getElementById('untukDivisi').value,
+                perihal: document.getElementById('perihal').value,
+                analisTindakLanjut: document.getElementById('analisTindakLanjut').value,
+                tanggalMemo: document.getElementById('tanggalMemo').value,
+                tanggalDisposisi: document.getElementById('tanggalDisposisi').value,
+                status: 'process',
+                createdAt: new Date().toISOString()
+            };
+
+            try {
+                showLoading(true);
+                await addDoc(collection(db, 'disposisi'), memoData);
+                showToast('Data berhasil disimpan!', 'success');
+                document.getElementById('disposisiForm').reset();
+                document.getElementById('externalDivisi').style.display = 'none';
+            } catch (error) {
+                console.error('Error:', error);
+                showToast('Gagal menyimpan data!', 'error');
+            } finally {
+                showLoading(false);
+            }
+        }
+
+        // Load data from Firebase
+        function loadData() {
+            const q = query(collection(db, 'disposisi'), orderBy('createdAt', 'desc'));
+            
+            onSnapshot(q, (snapshot) => {
+                memoData = [];
+                snapshot.forEach((doc) => {
+                    memoData.push({ id: doc.id, ...doc.data() });
+                });
+                updateDisplay();
+            });
+        }
+
+        // Update all displays
+        function updateDisplay() {
+            updateSummary();
+            updateCalendar();
+            updateCharts();
+            updateStatistics();
+        }
+
+        // Update summary lists
+        function updateSummary() {
+            const processList = document.getElementById('processList');
+            const completedList = document.getElementById('completedList');
+            
+            const processData = memoData.filter(m => m.status === 'process');
+            const completedData = memoData.filter(m => m.status === 'completed');
+
+            // Update process list
+            if (processData.length > 0) {
+                processList.innerHTML = processData.map(memo => createMemoCard(memo)).join('');
+            } else {
+                processList.innerHTML = '<div class="empty-state"><i class="fas fa-inbox"></i><p>Tidak ada memo yang sedang diproses</p></div>';
+            }
+
+            // Update completed list
+            if (completedData.length > 0) {
+                completedList.innerHTML = completedData.map(memo => createMemoCard(memo)).join('');
+            } else {
+                completedList.innerHTML = '<div class="empty-state"><i class="fas fa-inbox"></i><p>Tidak ada memo yang selesai</p></div>';
+            }
+
+            // Update counts
+            document.getElementById('processCount').textContent = processData.length + ' Memo';
+            document.getElementById('completedCount').textContent = completedData.length + ' Memo';
+        }
+
+        // Create memo card HTML
+        function createMemoCard(memo) {
+            const statusClass = memo.status === 'completed' ? 'completed' : 'process';
+            const statusBadge = memo.status === 'completed' ? 
+                '<span class="badge bg-success">Selesai</span>' : 
+                '<span class="badge bg-warning">On Process</span>';
+
+            return `
+                <div class="memo-item ${statusClass}">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div>
+                            <h5>${memo.nomorMemo} ${statusBadge}</h5>
+                            <p class="mb-1"><strong>Dari:</strong> ${memo.dariDivisi}</p>
+                            <p class="mb-1"><strong>Perihal:</strong> ${memo.perihal}</p>
+                            <p class="mb-1"><strong>Analis:</strong> ${memo.analisTindakLanjut}</p>
+                            <p class="mb-1"><strong>Tanggal Disposisi:</strong> ${formatDate(memo.tanggalDisposisi)}</p>
+                        </div>
+                    </div>
+                    <div class="action-buttons">
+                        ${memo.status === 'process' ? 
+                            `<button class="btn btn-success btn-sm" onclick="markCompleted('${memo.id}')">
+                                <i class="fas fa-check"></i> Selesai
+                            </button>` : 
+                            `<button class="btn btn-warning btn-sm" onclick="markProcess('${memo.id}')">
+                                <i class="fas fa-undo"></i> Process
+                            </button>`
+                        }
+                        <button class="btn btn-info btn-sm" onclick="editMemo('${memo.id}')">
+                            <i class="fas fa-edit"></i> Edit
+                        </button>
+                        <button class="btn btn-danger btn-sm" onclick="deleteMemo('${memo.id}')">
+                            <i class="fas fa-trash"></i> Hapus
+                        </button>
+                    </div>
+                </div>
+            `;
+        }
+
+        // Update calendar
+        function updateCalendar() {
+            calendar.removeAllEvents();
+            
+            memoData.forEach(memo => {
+                calendar.addEvent({
+                    id: memo.id,
+                    title: memo.nomorMemo + ' - ' + memo.analisTindakLanjut,
+                    start: memo.tanggalDisposisi,
+                    className: memo.status === 'completed' ? 'fc-event-completed' : 'fc-event-process'
+                });
+            });
+        }
+
+        // Update charts
+        function updateCharts() {
+            // Update Analis Chart
+            const analisCount = {
+                'Analis Renstra': 0,
+                'Analis MKO': 0,
+                'Analis RESKO': 0
+            };
+
+            memoData.forEach(memo => {
+                if (analisCount[memo.analisTindakLanjut] !== undefined) {
+                    analisCount[memo.analisTindakLanjut]++;
+                }
+            });
+
+            analisChart.data.datasets[0].data = Object.values(analisCount);
+            analisChart.update();
+
+            // Update Status Chart
+            const statusCount = {
+                process: memoData.filter(m => m.status === 'process').length,
+                completed: memoData.filter(m => m.status === 'completed').length
+            };
+
+            statusChart.data.datasets[0].data = [statusCount.process, statusCount.completed];
+            statusChart.update();
+
+            // Update Timeline Chart
+            updateTimelineChart();
+        }
+
+        // Update timeline chart
+        function updateTimelineChart() {
+            const monthlyData = {};
+            
+            memoData.forEach(memo => {
+                const date = new Date(memo.tanggalDisposisi);
+                const monthYear = date.toLocaleDateString('id-ID', { month: 'short', year: 'numeric' });
+                
+                if (!monthlyData[monthYear]) {
+                    monthlyData[monthYear] = { process: 0, completed: 0 };
+                }
+                
+                monthlyData[monthYear][memo.status === 'completed' ? 'completed' : 'process']++;
+            });
+
+            const labels = Object.keys(monthlyData).sort((a, b) => {
+                return new Date(a) - new Date(b);
+            });
+
+            timelineChart.data.labels = labels;
+            timelineChart.data.datasets[0].data = labels.map(l => monthlyData[l].process);
+            timelineChart.data.datasets[1].data = labels.map(l => monthlyData[l].completed);
+            timelineChart.update();
+        }
+
+        // Update statistics
+        function updateStatistics() {
+            document.getElementById('totalMemo').textContent = memoData.length;
+            document.getElementById('totalProcess').textContent = memoData.filter(m => m.status === 'process').length;
+            document.getElementById('totalCompleted').textContent = memoData.filter(m => m.status === 'completed').length;
+        }
+
+        // Mark as completed
+        window.markCompleted = async function(id) {
+            try {
+                showLoading(true);
+                await updateDoc(doc(db, 'disposisi', id), {
+                    status: 'completed',
+                    completedAt: new Date().toISOString()
+                });
+                showToast('Status berhasil diubah menjadi Selesai!', 'success');
+            } catch (error) {
+                console.error('Error:', error);
+                showToast('Gagal mengubah status!', 'error');
+            } finally {
+                showLoading(false);
+            }
+        };
+
+        // Mark as process
+        window.markProcess = async function(id) {
+            try {
+                showLoading(true);
+                await updateDoc(doc(db, 'disposisi', id), {
+                    status: 'process'
+                });
+                showToast('Status berhasil diubah menjadi On Process!', 'success');
+            } catch (error) {
+                console.error('Error:', error);
+                showToast('Gagal mengubah status!', 'error');
+            } finally {
+                showLoading(false);
+            }
+        };
+
+        // Edit memo
+        window.editMemo = function(id) {
+            const memo = memoData.find(m => m.id === id);
+            if (memo) {
+                document.getElementById('editId').value = memo.id;
+                document.getElementById('editNomorMemo').value = memo.nomorMemo;
+                document.getElementById('editDariDivisi').value = memo.dariDivisi;
+                document.getElementById('editPerihal').value = memo.perihal;
+                document.getElementById('editAnalis').value = memo.analisTindakLanjut;
+                document.getElementById('editStatus').value = memo.status;
+                document.getElementById('editTanggalMemo').value = memo.tanggalMemo;
+                document.getElementById('editTanggalDisposisi').value = memo.tanggalDisposisi;
+                
+                const modal = new bootstrap.Modal(document.getElementById('editModal'));
+                modal.show();
+            }
+        };
+
+        // Update memo
+        window.updateMemo = async function() {
+            const id = document.getElementById('editId').value;
+            
+            const updatedData = {
+                nomorMemo: document.getElementById('editNomorMemo').value,
+                dariDivisi: document.getElementById('editDariDivisi').value,
+                perihal: document.getElementById('editPerihal').value,
+                analisTindakLanjut: document.getElementById('editAnalis').value,
+                status: document.getElementById('editStatus').value,
+                tanggalMemo: document.getElementById('editTanggalMemo').value,
+                tanggalDisposisi: document.getElementById('editTanggalDisposisi').value,
+                updatedAt: new Date().toISOString()
+            };
+
+            try {
+                showLoading(true);
+                await updateDoc(doc(db, 'disposisi', id), updatedData);
+                showToast('Data berhasil diperbarui!', 'success');
+                bootstrap.Modal.getInstance(document.getElementById('editModal')).hide();
+            } catch (error) {
+                console.error('Error:', error);
+                showToast('Gagal memperbarui data!', 'error');
+            } finally {
+                showLoading(false);
+            }
+        };
+
+        // Delete memo
+        window.deleteMemo = async function(id) {
+            if (confirm('Apakah Anda yakin ingin menghapus memo ini?')) {
+                try {
+                    showLoading(true);
+                    await deleteDoc(doc(db, 'disposisi', id));
+                    showToast('Data berhasil dihapus!', 'success');
+                } catch (error) {
+                    console.error('Error:', error);
+                    showToast('Gagal menghapus data!', 'error');
+                } finally {
+                    showLoading(false);
+                }
+            }
+        };
+
+        // Show memo detail
+        window.showMemoDetail = function(memo) {
+            const statusText = memo.status === 'completed' ? 'Sudah Selesai' : 'On Process';
+            const statusColor = memo.status === 'completed' ? 'success' : 'warning';
+            
+            alert(`
+                Nomor Memo: ${memo.nomorMemo}
+                Dari: ${memo.dariDivisi}
+                Perihal: ${memo.perihal}
+                Analis: ${memo.analisTindakLanjut}
+                Status: ${statusText}
+                Tanggal Memo: ${formatDate(memo.tanggalMemo)}
+                Tanggal Disposisi: ${formatDate(memo.tanggalDisposisi)}
+            `);
+        };
+
+        // Reset form
+        window.resetForm = function() {
+            document.getElementById('disposisiForm').reset();
+            document.getElementById('externalDivisi').style.display = 'none';
+        };
+
+        // Show loading
+        function showLoading(show) {
+            const spinner = document.querySelector('.loading-spinner');
+            if (show) {
+                spinner.classList.add('active');
+            } else {
+                spinner.classList.remove('active');
+            }
+        }
+
+        // Show toast notification
+        function showToast(message, type) {
+            const toastContainer = document.querySelector('.toast-container');
+            const toastId = 'toast-' + Date.now();
+            
+            const toastHTML = `
+                <div id="${toastId}" class="toast align-items-center text-white bg-${type === 'success' ? 'success' : 'danger'}" role="alert">
+                    <div class="d-flex">
+                        <div class="toast-body">
+                            ${message}
+                        </div>
+                        <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+                    </div>
+                </div>
+            `;
+            
+            toastContainer.insertAdjacentHTML('beforeend', toastHTML);
+            const toast = new bootstrap.Toast(document.getElementById(toastId));
+            toast.show();
+            
+            setTimeout(() => {
+                document.getElementById(toastId)?.remove();
+            }, 5000);
+        }
+
+        // Format date
+        function formatDate(dateString) {
+            const options = { day: 'numeric', month: 'long', year: 'numeric' };
+            return new Date(dateString).toLocaleDateString('id-ID', options);
+        }
+    </script>
+</body>
+</html>
