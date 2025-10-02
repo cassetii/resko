@@ -10,7 +10,7 @@
     <!-- Font Awesome -->
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <!-- FullCalendar CSS -->
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/fullcalendar/6.1.8/fullcalendar.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.css" rel="stylesheet">
     
     <style>
         :root {
@@ -627,7 +627,7 @@
 
     <!-- Scripts -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/fullcalendar/6.1.8/index.global.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.3.0/chart.umd.min.js"></script>
     
     <!-- Firebase -->
@@ -657,10 +657,26 @@
 
         // Initialize
         document.addEventListener('DOMContentLoaded', function() {
-            initializeCalendar();
-            initializeCharts();
-            loadData();
-            setupEventListeners();
+            console.log('DOM Loaded, initializing components...');
+            
+            // Initialize components with delay to ensure libraries are loaded
+            setTimeout(() => {
+                initializeCalendar();
+                initializeCharts();
+                loadData();
+                setupEventListeners();
+                
+                // Re-initialize calendar when tab is shown
+                const calendarTab = document.getElementById('calendar-tab');
+                calendarTab.addEventListener('shown.bs.tab', function () {
+                    if (calendar) {
+                        setTimeout(() => {
+                            calendar.updateSize();
+                            calendar.render();
+                        }, 100);
+                    }
+                });
+            }, 500);
         });
 
         // Setup Event Listeners
@@ -684,23 +700,49 @@
         // Initialize Calendar
         function initializeCalendar() {
             const calendarEl = document.getElementById('calendar');
+            if (!calendarEl) {
+                console.error('Calendar element not found');
+                return;
+            }
+            
             calendar = new FullCalendar.Calendar(calendarEl, {
                 initialView: 'dayGridMonth',
+                height: 'auto',
                 headerToolbar: {
                     left: 'prev,next today',
                     center: 'title',
-                    right: 'dayGridMonth,timeGridWeek'
+                    right: 'dayGridMonth,dayGridWeek'
+                },
+                buttonText: {
+                    today: 'Hari Ini',
+                    month: 'Bulan',
+                    week: 'Minggu'
                 },
                 locale: 'id',
+                firstDay: 1,
                 events: [],
+                eventDisplay: 'block',
+                dayMaxEvents: 3,
                 eventClick: function(info) {
                     const memo = memoData.find(m => m.id === info.event.id);
                     if (memo) {
                         showMemoDetail(memo);
                     }
+                },
+                eventDidMount: function(info) {
+                    // Add custom styling to events
+                    if (info.event.extendedProps.status === 'completed') {
+                        info.el.style.backgroundColor = '#27ae60';
+                        info.el.style.borderColor = '#27ae60';
+                    } else {
+                        info.el.style.backgroundColor = '#f39c12';
+                        info.el.style.borderColor = '#f39c12';
+                    }
                 }
             });
+            
             calendar.render();
+            console.log('Calendar initialized');
         }
 
         // Initialize Charts
@@ -925,16 +967,28 @@
 
         // Update calendar
         function updateCalendar() {
+            if (!calendar) {
+                console.error('Calendar not initialized');
+                return;
+            }
+            
             calendar.removeAllEvents();
             
             memoData.forEach(memo => {
-                calendar.addEvent({
+                const event = {
                     id: memo.id,
-                    title: memo.nomorMemo + ' - ' + memo.analisTindakLanjut,
+                    title: `${memo.nomorMemo} - ${memo.analisTindakLanjut}`,
                     start: memo.tanggalDisposisi,
-                    className: memo.status === 'completed' ? 'fc-event-completed' : 'fc-event-process'
-                });
+                    allDay: true,
+                    extendedProps: {
+                        status: memo.status
+                    }
+                };
+                
+                calendar.addEvent(event);
             });
+            
+            console.log('Calendar updated with', memoData.length, 'events');
         }
 
         // Update charts
